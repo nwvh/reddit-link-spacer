@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Reddit Link Spacer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --sans: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "DM Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    --bg: #0f1013;
+    --surface: #14151a;
+    --text: #d9dbe2;
+    --muted: #8a90a0;
+    --line: #262830;
+    --line-strong: #3b3e49;
+    --gap: #ff4d94;
+    --joined: rgba(138, 162, 255, 0.2);
+    --warn: #ff8fb8;
+
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+
+  *, *::before, *::after { box-sizing: inherit; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 28px clamp(16px, 4vw, 32px) 64px;
+  }
+
+  /* Header */
+  .top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    flex-wrap: wrap;
+  }
+
+  .wordmark {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .wordmark-gap {
+    display: inline-block;
+    width: 0.3em;
+    height: 0.6em;
+    margin: 0 0.08em;
+    background: var(--gap);
+  }
+
+  .local-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  /* Intro */
+  .hero { margin-top: clamp(48px, 10vw, 96px); }
+
+  .demo {
+    margin: 0 0 20px;
+    font-size: clamp(1.9rem, 7vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .demo-gap {
+    display: inline-block;
+    width: 0.3em;
+    height: 0.68em;
+    background: var(--gap);
+    animation: open-gap 0.8s 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  @keyframes open-gap {
+    from { width: 0; opacity: 0; }
+    to   { width: 0.3em; opacity: 1; }
+  }
+
+  .lede {
+    max-width: 54ch;
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 28px;
+    margin-top: clamp(40px, 7vw, 64px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tab {
+    min-height: 44px;
+    margin-bottom: -1px;
+    padding: 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--muted);
+    font: 500 0.95rem/1 var(--sans);
+    cursor: pointer;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab[aria-selected="true"] {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+
+  .hint {
+    margin: 14px 0 20px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* Workspace */
+  .bench {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .bench[hidden] { display: none; }
+
+  .pane {
+    min-width: 0;
+  }
+
+  .pane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    min-height: 40px;
+  }
+
+  .pane-title {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .pane-tools {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .status.is-warn { color: var(--warn); }
+
+  .field,
+  .result {
+    display: block;
+    width: 100%;
+    height: clamp(280px, 50vh, 480px);
+    margin: 0;
+    padding: 14px 16px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font: 400 0.875rem/1.7 var(--mono);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .field {
+    resize: none;
+    caret-color: var(--gap);
+  }
+
+  .field:hover,
+  .result:hover { border-color: var(--line-strong); }
+
+  .field::placeholder { color: var(--muted); opacity: 1; }
+
+  .field:focus-visible,
+  .result:focus-visible {
+    outline: 0;
+    border-color: var(--muted);
+  }
+
+  .result[data-empty="true"]::before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+  }
+
+  .mark-gap {
+    background: var(--gap);
+    border-radius: 2px;
+  }
+
+  .mark-joined {
+    background: var(--joined);
+    border-radius: 2px;
+  }
+
+  .copy {
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text);
+    font: 500 0.875rem/1 var(--sans);
+    cursor: pointer;
+  }
+
+  .copy:hover:not(:disabled) { border-color: var(--muted); }
+  .copy:disabled { color: var(--muted); border-color: var(--line); cursor: not-allowed; }
+
+  .foot {
+    max-width: 62ch;
+    margin: 24px 0 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 760px) {
+    .bench { grid-template-columns: 1fr; }
+    .field, .result { height: clamp(200px, 32vh, 320px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .demo-gap { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="wordmark" aria-label="reddit-link-spacer">reddit link<span class="wordmark-gap"></span>spacer</div>
+    <p class="local-note">Runs in your browser. Nothing you paste is uploaded.</p>
+  </header>
+
+  <main>
+
+    <div class="tabs" role="tablist" aria-label="Direction">
+      <button type="button" class="tab" role="tab" id="tab-space" aria-controls="panel-space" aria-selected="true" data-mode="space">Space links</button>
+      <button type="button" class="tab" role="tab" id="tab-restore" aria-controls="panel-restore" aria-selected="false" tabindex="-1" data-mode="restore">Restore links</button>
+    </div>
+    <p class="hint" id="mode-hint"></p>
+
+    <div class="bench" role="tabpanel" id="panel-space" aria-labelledby="tab-space"></div>
+    <div class="bench" role="tabpanel" id="panel-restore" aria-labelledby="tab-restore" hidden></div>
+
+  </main>
+</div>
+
+<template id="bench-template">
+  <div class="pane">
+    <div class="pane-head">
+      <h2 class="pane-title" data-role="in-title"></h2>
+    </div>
+    <textarea class="field" data-role="field" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+  </div>
+  <div class="pane">
+    <div class="pane-head">
+      <h2 class="pane-title" data-role="out-title"></h2>
+      <div class="pane-tools">
+        <span class="status" role="status" data-role="status"></span>
+        <button type="button" class="copy" data-role="copy">Copy</button>
+      </div>
+    </div>
+    <div class="result" role="region" tabindex="0" data-role="result"></div>
+  </div>
+</template>
+
+<script>
+(() => {
+  'use strict';
+  const SCHEME_START = '(?<![A-Za-z0-9])';
+
+  const MODES = {
+    space: {
+      pattern: new RegExp(`${SCHEME_START}(https?)(:\\/\\/)`, 'gi'),
+      rewrite: (scheme, sep) => [
+        { text: scheme },
+        { text: ' ', mark: 'gap' },
+        { text: sep },
+      ],
+      hint: 'Adds a space before :// in every http and https link.',
+      inTitle: 'Original text',
+      outTitle: 'Spaced text',
+      inPlaceholder: 'Paste your post or comment here.',
+      outPlaceholder: 'The spaced text shows up here.',
+      done: 'spaced',
+    },
+    restore: {
+      pattern: new RegExp(`${SCHEME_START}(https?) (:\\/\\/)`, 'gi'),
+      rewrite: (scheme, sep) => [
+        { text: scheme },
+        { text: sep, mark: 'joined' },
+      ],
+      hint: 'Removes that space again, so links work as normal.',
+      inTitle: 'Spaced text',
+      outTitle: 'Restored text',
+      inPlaceholder: 'Paste text with spaced links here.',
+      outPlaceholder: 'The restored text shows up here.',
+      done: 'restored',
+    },
+  };
+
+  const SAMPLE = [
+    'Honestly the best setup guide I found was on the project wiki: https://github.com/example/project/wiki/setup',
+    '',
+    'If you get the permissions error, this thread has the fix:',
+    '[old thread](https://www.reddit.com/r/example/comments/abc123/permissions_error/)',
+    '',
+    'edit: forgot the docs http://docs.example.org/guide?ref=reddit#install',
+  ].join('\n');
+
+  function transform(mode, input) {
+    const parts = [];
+    let last = 0;
+    let count = 0;
+
+    for (const match of input.matchAll(mode.pattern)) {
+      if (match.index > last) parts.push({ text: input.slice(last, match.index) });
+      parts.push(...mode.rewrite(match[1], match[2]));
+      last = match.index + match[0].length;
+      count += 1;
+    }
+    if (last < input.length) parts.push({ text: input.slice(last) });
+
+    return { parts, count, text: parts.map((p) => p.text).join('') };
+  }
+
+  function toNode(part) {
+    if (!part.mark) return document.createTextNode(part.text);
+    const span = document.createElement('span');
+    span.className = `mark-${part.mark}`;
+    span.textContent = part.text;
+    return span;
+  }
+
+  function selectContents(node) {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  const template = document.getElementById('bench-template');
+
+  function buildBench(key, initialText) {
+    const mode = MODES[key];
+    const bench = document.getElementById(`panel-${key}`);
+    bench.append(template.content.cloneNode(true));
+
+    const part = (role) => bench.querySelector(`[data-role="${role}"]`);
+    const inTitle = part('in-title');
+    const outTitle = part('out-title');
+    const field = part('field');
+    const result = part('result');
+    const status = part('status');
+    const copyButton = part('copy');
+
+    inTitle.id = `${key}-in-title`;
+    outTitle.id = `${key}-out-title`;
+    inTitle.textContent = mode.inTitle;
+    outTitle.textContent = mode.outTitle;
+    field.setAttribute('aria-labelledby', inTitle.id);
+    field.placeholder = mode.inPlaceholder;
+    result.setAttribute('aria-labelledby', outTitle.id);
+    result.dataset.placeholder = mode.outPlaceholder;
+    field.value = initialText;
+
+    let output = { text: '', count: 0 };
+    let resetTimer = 0;
+
+    function defaultStatus() {
+      if (output.text === '') return '';
+      if (output.count === 0) return 'No links found';
+      return `${output.count} ${output.count === 1 ? 'link' : 'links'} ${mode.done}`;
+    }
+
+    function setStatus(text, isWarn = false) {
+      status.textContent = text;
+      status.classList.toggle('is-warn', isWarn);
+    }
+
+    function resetCopyFeedback() {
+      window.clearTimeout(resetTimer);
+      copyButton.textContent = 'Copy';
+      setStatus(defaultStatus());
+    }
+
+    function render() {
+      output = transform(mode, field.value);
+      result.replaceChildren(...output.parts.map(toNode));
+      result.dataset.empty = output.text === '' ? 'true' : 'false';
+      copyButton.disabled = output.text === '';
+      resetCopyFeedback();
+    }
+
+    async function copy() {
+      window.clearTimeout(resetTimer);
+      try {
+        await navigator.clipboard.writeText(output.text);
+        copyButton.textContent = 'Copied';
+        setStatus('Copied to clipboard');
+        resetTimer = window.setTimeout(resetCopyFeedback, 1800);
+      } catch {
+        selectContents(result);
+        setStatus('Clipboard blocked. Text is selected, press Ctrl+C or Cmd+C.', true);
+        resetTimer = window.setTimeout(resetCopyFeedback, 6000);
+      }
+    }
+
+    field.addEventListener('input', render);
+    copyButton.addEventListener('click', copy);
+    render();
+  }
+
+  buildBench('space', SAMPLE);
+  buildBench('restore', transform(MODES.space, SAMPLE).text);
+
+  const tablist = document.querySelector('[role="tablist"]');
+  const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+  const panels = tabs.map((tab) => document.getElementById(tab.getAttribute('aria-controls')));
+  const hint = document.getElementById('mode-hint');
+
+  function selectTab(index, { focus = false } = {}) {
+    tabs.forEach((tab, i) => {
+      const active = i === index;
+      tab.setAttribute('aria-selected', String(active));
+      tab.tabIndex = active ? 0 : -1;
+      panels[i].hidden = !active;
+    });
+    hint.textContent = MODES[tabs[index].dataset.mode].hint;
+    if (focus) tabs[index].focus();
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectTab(i));
+    tab.addEventListener('keydown', (event) => {
+      const last = tabs.length - 1;
+      const targets = {
+        ArrowRight: i === last ? 0 : i + 1,
+        ArrowLeft: i === 0 ? last : i - 1,
+        Home: 0,
+        End: last,
+      };
+      if (!(event.key in targets)) return;
+      event.preventDefault();
+      selectTab(targets[event.key], { focus: true });
+    });
+  });
+
+  selectTab(0);
+})();
+</script>
+</body>
+</html>
